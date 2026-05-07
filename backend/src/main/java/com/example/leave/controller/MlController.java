@@ -59,7 +59,7 @@ public class MlController {
 
             try {
                 // Integration with Local Flask prediction server
-                Map response = restTemplate.postForObject("http://localhost:5000/predict", request, Map.class);
+                Map response = restTemplate.postForObject("https://employee-leave-management-system-ml.onrender.com",request,Map.class);
                 
                 if (response != null) {
                     result.put("prediction", response.get("prediction"));
