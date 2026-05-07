@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const baseURL =
-  import.meta.env.VITE_API_BASE_URL || "http://localhost:8080/api";
+  import.meta.env.VITE_API_BASE_URL || "https://employee-leave-management-system-backend-h7ke.onrender.com";
 
 const api = axios.create({ baseURL });
 
