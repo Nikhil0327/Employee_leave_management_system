@@ -14,20 +14,26 @@ import { useAuth } from "./hooks/useAuth.jsx";
 
 function RequireAuth({ children, roles }) {
   const { user } = useAuth();
+
   if (!user) {
     return <Navigate to="/login" replace />;
   }
+
   if (roles && !roles.includes(user.role)) {
     return <Navigate to="/login" replace />;
   }
+
   return children;
 }
 
 export default function App() {
   return (
     <Routes>
+
       <Route path="/" element={<Navigate to="/login" replace />} />
+
       <Route path="/login" element={<Login />} />
+
       <Route path="/register" element={<Register />} />
 
       <Route
@@ -37,6 +43,9 @@ export default function App() {
           </RequireAuth>
         }
       >
+
+        {/* EMPLOYEE */}
+
         <Route
           path="/employee"
           element={
@@ -45,6 +54,7 @@ export default function App() {
             </RequireAuth>
           }
         />
+
         <Route
           path="/employee/history"
           element={
@@ -53,6 +63,9 @@ export default function App() {
             </RequireAuth>
           }
         />
+
+        {/* MANAGER */}
+
         <Route
           path="/manager"
           element={
@@ -61,14 +74,18 @@ export default function App() {
             </RequireAuth>
           }
         />
+
         <Route
           path="/manager/approvals"
           element={
-            <RequireAuth roles={["MANAGER", "ADMIN"]}>
+            <RequireAuth roles={["MANAGER"]}>
               <LeaveApproval />
             </RequireAuth>
           }
         />
+
+        {/* ADMIN */}
+
         <Route
           path="/admin"
           element={
@@ -77,6 +94,18 @@ export default function App() {
             </RequireAuth>
           }
         />
+
+        {/* THIS IS THE IMPORTANT NEW ROUTE */}
+
+        <Route
+          path="/admin/approvals"
+          element={
+            <RequireAuth roles={["ADMIN"]}>
+              <LeaveApproval />
+            </RequireAuth>
+          }
+        />
+
         <Route
           path="/admin/policy"
           element={
@@ -85,6 +114,7 @@ export default function App() {
             </RequireAuth>
           }
         />
+
         <Route
           path="/admin/reports"
           element={
@@ -93,9 +123,11 @@ export default function App() {
             </RequireAuth>
           }
         />
+
       </Route>
 
       <Route path="*" element={<NotFound />} />
+
     </Routes>
   );
 }
