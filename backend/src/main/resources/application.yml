@@ -32,7 +32,7 @@ app:
     secret: ${JWT_SECRET:change-this-secret-please-use-at-least-32-chars}
     expirationMinutes: ${JWT_EXPIRES_MINUTES:120}
   files:
-    uploadDir: ${UPLOAD_DIR:uploads}
+    uploadDir: ${UPLOAD_DIR:/tmp/uploads}
   notifications:
     mode: ${NOTIFICATIONS_MODE:log}
     from: ${NOTIFICATIONS_FROM:no-reply@leave.local}
