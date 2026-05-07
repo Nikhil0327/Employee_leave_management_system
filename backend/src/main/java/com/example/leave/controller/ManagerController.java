@@ -31,7 +31,7 @@ public class ManagerController {
   }
 
   @GetMapping("/leaves")
-  @PreAuthorize("hasRole('MANAGER')")
+  @PreAuthorize("hasAnyRole('MANAGER','ADMIN')")
   public List<LeaveRequest> teamLeaves(
       Authentication authentication,
       @RequestParam(required = false) LeaveStatus status,
