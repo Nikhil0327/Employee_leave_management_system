@@ -1,0 +1,38 @@
+server:
+  port: 8080
+
+spring:
+  mail:
+    host: ${SMTP_HOST:}
+    port: ${SMTP_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: ${SMTP_AUTH:true}
+          starttls:
+            enable: ${SMTP_STARTTLS:true}
+  data:
+    mongodb:
+      uri: ${MONGODB_URI:mongodb+srv://nirooppapani8305:niroop8305@cluster0.pra0zzh.mongodb.net/EmployeeLeaveManagement}
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 5MB
+
+app:
+  departments:
+    - HR
+    - Engineering
+    - Sales
+    - Finance
+    - Operations
+  jwt:
+    secret: ${JWT_SECRET:change-this-secret-please-use-at-least-32-chars}
+    expirationMinutes: ${JWT_EXPIRES_MINUTES:120}
+  files:
+    uploadDir: ${UPLOAD_DIR:/tmp/uploads}
+  notifications:
+    mode: ${NOTIFICATIONS_MODE:log}
+    from: ${NOTIFICATIONS_FROM:no-reply@leave.local}

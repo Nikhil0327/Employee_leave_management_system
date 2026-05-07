@@ -1,0 +1,32 @@
+# Java / Maven
+/target/
+**/target/
+*.class
+*.jar
+*.war
+*.ear
+
+# IDE
+.idea/
+*.iml
+*.ipr
+*.iws
+.vscode/
+
+# Logs
+*.log
+
+# Node / React
+node_modules/
+**/node_modules/
+dist/
+**/dist/
+.vite/
+
+# Env files
+.env
+.env.*
+
+# OS
+.DS_Store
+Thumbs.db
