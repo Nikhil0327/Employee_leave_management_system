@@ -28,51 +28,102 @@ public class MlController {
 
     @PostMapping("/predict")
     public List<Map<String, Object>> getPredictions() {
+
         List<User> users = userService.listUsers();
+
         List<Map<String, Object>> results = new ArrayList<>();
+
         Random random = new Random();
 
         for (User u : users) {
-            // Data mocking to fulfill ML Model constraints without breaking existing User collections
+
+            // Mock employee data for ML prediction
+
             int age = 22 + random.nextInt(40);
+
             int salary = 30000 + random.nextInt(70000);
+
             int overtime = random.nextInt(2);
+
             int distance = 1 + random.nextInt(25);
+
             int experience = 1 + random.nextInt(20);
 
+            // Request payload for Flask ML API
+
             Map<String, Object> request = new HashMap<>();
+
             request.put("age", age);
+
             request.put("salary", salary);
+
             request.put("overtime", overtime);
+
             request.put("distance", distance);
+
             request.put("experience", experience);
 
+            // Result object sent to frontend
+
             Map<String, Object> result = new HashMap<>();
+
             result.put("userId", u.getId());
+
             result.put("name", u.getFullName());
+
             result.put("department", u.getDepartment());
+
             result.put("age", age);
+
             result.put("salary", salary);
+
             result.put("overtime", overtime);
+
             result.put("distance", distance);
+
             result.put("experience", experience);
 
             try {
-                // Integration with Local Flask prediction server
-                Map response = restTemplate.postForObject("https://employee-leave-management-system-ml.onrender.com",request,Map.class);
-                
+
+                // CALL FLASK ML API
+
+                Map response = restTemplate.postForObject(
+                        "https://employee-leave-management-system-ml.onrender.com/predict",
+                        request,
+                        Map.class
+                );
+
                 if (response != null) {
+
                     result.put("prediction", response.get("prediction"));
+
                     result.put("risk", response.get("risk"));
+
                     result.put("probability", response.get("probability"));
+
                 } else {
+
+                    result.put("prediction", -1);
+
                     result.put("risk", "Unknown");
+
+                    result.put("probability", null);
                 }
+
             } catch (Exception e) {
-                result.put("risk", "Error");
+
+                result.put("prediction", -1);
+
+                result.put("risk", "ERROR");
+
+                result.put("probability", null);
+
+                result.put("message", e.getMessage());
             }
+
             results.add(result);
         }
+
         return results;
     }
 }
