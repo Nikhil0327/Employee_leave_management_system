@@ -201,7 +201,7 @@ export default function AdminDashboard() {
               {predictions.length === 0 && (
                 <tr>
                   <td colSpan="4" className="py-6 text-center text-slate-500">
-                    Loading predictions... (Ensure ML API is running on port 5000)
+                    Loading predictions....
                   </td>
                 </tr>
               )}
