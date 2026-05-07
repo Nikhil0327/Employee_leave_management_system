@@ -9,14 +9,15 @@ import com.example.leave.model.LeaveStatus;
 import com.example.leave.model.User;
 import com.example.leave.repository.LeaveRequestRepository;
 import com.example.leave.util.DateUtils;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Year;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class LeaveService {
+
   private final LeaveRequestRepository leaveRequestRepository;
   private final UserService userService;
   private final PolicyService policyService;
@@ -46,8 +48,11 @@ public class LeaveService {
   }
 
   public LeaveRequest applyLeave(User user, LeaveApplyRequest request) {
+
     double totalDays = DateUtils.calculateLeaveDays(
-        request.getStartDate(), request.getEndDate(), request.isHalfDay()
+        request.getStartDate(),
+        request.getEndDate(),
+        request.isHalfDay()
     );
 
     LeaveRequest leave = LeaveRequest.builder()
@@ -66,33 +71,61 @@ public class LeaveService {
         .build();
 
     LeaveRequest saved = leaveRequestRepository.save(leave);
+
     notificationService.leaveApplied(saved);
+
     return saved;
   }
 
   public List<LeaveRequest> getMyLeaves(User user) {
-    return leaveRequestRepository.findByEmployeeIdOrderByAppliedAtDesc(user.getId());
+
+    return leaveRequestRepository
+        .findByEmployeeIdOrderByAppliedAtDesc(user.getId());
   }
 
-  public List<LeaveRequest> getCalendar(LocalDate start, LocalDate end) {
-    Criteria criteria = Criteria.where("status").is(LeaveStatus.APPROVED)
+  public List<LeaveRequest> getCalendar(
+      LocalDate start,
+      LocalDate end
+  ) {
+
+    Criteria criteria = Criteria.where("status")
+        .is(LeaveStatus.APPROVED)
         .and("startDate").lte(end)
         .and("endDate").gte(start);
+
     Query query = new Query(criteria);
+
     return mongoTemplate.find(query, LeaveRequest.class);
   }
 
   public LeaveBalanceResponse getLeaveBalance(User user) {
-    LeavePolicy policy = policyService.getPolicy();
-    int year = Year.now().getValue();
-    List<LeaveRequest> approved = leaveRequestRepository.findByEmployeeIdOrderByAppliedAtDesc(user.getId())
-        .stream()
-        .filter(leave -> leave.getStatus() == LeaveStatus.APPROVED)
-        .filter(leave -> leave.getStartDate() != null && leave.getStartDate().getYear() == year)
-        .toList();
 
-    double used = approved.stream().mapToDouble(LeaveRequest::getTotalDays).sum();
+    LeavePolicy policy = policyService.getPolicy();
+
+    int year = Year.now().getValue();
+
+    List<LeaveRequest> approved =
+        leaveRequestRepository
+            .findByEmployeeIdOrderByAppliedAtDesc(user.getId())
+            .stream()
+            .filter(
+                leave ->
+                    leave.getStatus() == LeaveStatus.APPROVED
+            )
+            .filter(
+                leave ->
+                    leave.getStartDate() != null &&
+                    leave.getStartDate().getYear() == year
+            )
+            .toList();
+
+    double used =
+        approved.stream()
+            .mapToDouble(LeaveRequest::getTotalDays)
+            .sum();
+
     double max = policy.getMaxLeavesPerYear();
+
     double remaining = Math.max(max - used, 0.0);
 
     return LeaveBalanceResponse.builder()
@@ -109,14 +142,43 @@ public class LeaveService {
       LocalDate to,
       String employeeName
   ) {
-    List<User> team = userService.getTeamMembers(manager.getId());
+
+    // ADMIN can view ALL leaves
+    if ("ADMIN".equals(manager.getRole().name())) {
+
+      return getAllLeaves(
+          status,
+          from,
+          to,
+          null,
+          employeeName
+      );
+    }
+
+    // MANAGER sees only assigned employees
+    List<User> team =
+        userService.getTeamMembers(manager.getId());
+
     if (team.isEmpty()) {
       return List.of();
     }
 
-    List<String> employeeIds = team.stream().map(User::getId).toList();
-    Criteria criteria = Criteria.where("employeeId").in(employeeIds);
-    return filterLeaves(criteria, status, from, to, null, employeeName);
+    List<String> employeeIds =
+        team.stream()
+            .map(User::getId)
+            .toList();
+
+    Criteria criteria =
+        Criteria.where("employeeId").in(employeeIds);
+
+    return filterLeaves(
+        criteria,
+        status,
+        from,
+        to,
+        null,
+        employeeName
+    );
   }
 
   public List<LeaveRequest> getAllLeaves(
@@ -126,45 +188,103 @@ public class LeaveService {
       String department,
       String employeeName
   ) {
+
     Criteria criteria = new Criteria();
-    return filterLeaves(criteria, status, from, to, department, employeeName);
+
+    return filterLeaves(
+        criteria,
+        status,
+        from,
+        to,
+        department,
+        employeeName
+    );
   }
 
-  public LeaveRequest approveLeave(String leaveId, User approver, String remarks) {
-    LeaveRequest leave = getLeaveForDecision(leaveId, approver);
+  public LeaveRequest approveLeave(
+      String leaveId,
+      User approver,
+      String remarks
+  ) {
+
+    LeaveRequest leave =
+        getLeaveForDecision(leaveId, approver);
+
     leave.setStatus(LeaveStatus.APPROVED);
     leave.setRemarks(remarks);
     leave.setApproverId(approver.getId());
     leave.setDecisionAt(Instant.now());
-    LeaveRequest saved = leaveRequestRepository.save(leave);
+
+    LeaveRequest saved =
+        leaveRequestRepository.save(leave);
+
     notificationService.leaveDecided(saved);
+
     return saved;
   }
 
-  public LeaveRequest rejectLeave(String leaveId, User approver, String remarks) {
-    LeaveRequest leave = getLeaveForDecision(leaveId, approver);
+  public LeaveRequest rejectLeave(
+      String leaveId,
+      User approver,
+      String remarks
+  ) {
+
+    LeaveRequest leave =
+        getLeaveForDecision(leaveId, approver);
+
     leave.setStatus(LeaveStatus.REJECTED);
     leave.setRemarks(remarks);
     leave.setApproverId(approver.getId());
     leave.setDecisionAt(Instant.now());
-    LeaveRequest saved = leaveRequestRepository.save(leave);
+
+    LeaveRequest saved =
+        leaveRequestRepository.save(leave);
+
     notificationService.leaveDecided(saved);
+
     return saved;
   }
 
-  private LeaveRequest getLeaveForDecision(String leaveId, User approver) {
-    LeaveRequest leave = leaveRequestRepository.findById(leaveId)
-        .orElseThrow(() -> new ApiException(HttpStatus.NOT_FOUND, "Leave request not found"));
+  private LeaveRequest getLeaveForDecision(
+      String leaveId,
+      User approver
+  ) {
+
+    LeaveRequest leave =
+        leaveRequestRepository.findById(leaveId)
+            .orElseThrow(
+                () ->
+                    new ApiException(
+                        HttpStatus.NOT_FOUND,
+                        "Leave request not found"
+                    )
+            );
 
     if (leave.getStatus() != LeaveStatus.PENDING) {
-      throw new ApiException(HttpStatus.BAD_REQUEST, "Leave is already decided");
+
+      throw new ApiException(
+          HttpStatus.BAD_REQUEST,
+          "Leave is already decided"
+      );
     }
 
+    // MANAGER restrictions
     if ("MANAGER".equals(approver.getRole().name())) {
-      List<User> team = userService.getTeamMembers(approver.getId());
-      Set<String> teamIds = team.stream().map(User::getId).collect(Collectors.toSet());
+
+      List<User> team =
+          userService.getTeamMembers(approver.getId());
+
+      Set<String> teamIds =
+          team.stream()
+              .map(User::getId)
+              .collect(Collectors.toSet());
+
       if (!teamIds.contains(leave.getEmployeeId())) {
-        throw new ApiException(HttpStatus.FORBIDDEN, "Not allowed to approve this leave");
+
+        throw new ApiException(
+            HttpStatus.FORBIDDEN,
+            "Not allowed to approve this leave"
+        );
       }
     }
 
@@ -179,37 +299,77 @@ public class LeaveService {
       String department,
       String employeeName
   ) {
+
     List<Criteria> criteriaList = new ArrayList<>();
-    if (baseCriteria.getCriteriaObject() != null && !baseCriteria.getCriteriaObject().isEmpty()) {
+
+    if (
+        baseCriteria.getCriteriaObject() != null &&
+        !baseCriteria.getCriteriaObject().isEmpty()
+    ) {
       criteriaList.add(baseCriteria);
     }
 
     if (status != null) {
-      criteriaList.add(Criteria.where("status").is(status));
+
+      criteriaList.add(
+          Criteria.where("status").is(status)
+      );
     }
 
     if (department != null && !department.isBlank()) {
-      criteriaList.add(Criteria.where("department").is(department));
+
+      criteriaList.add(
+          Criteria.where("department").is(department)
+      );
     }
 
-    if (employeeName != null && !employeeName.isBlank()) {
-      criteriaList.add(Criteria.where("employeeName").regex(employeeName, "i"));
+    if (
+        employeeName != null &&
+        !employeeName.isBlank()
+    ) {
+
+      criteriaList.add(
+          Criteria.where("employeeName")
+              .regex(employeeName, "i")
+      );
     }
 
     if (from != null && to != null) {
-      criteriaList.add(Criteria.where("startDate").lte(to).and("endDate").gte(from));
+
+      criteriaList.add(
+          Criteria.where("startDate")
+              .lte(to)
+              .and("endDate")
+              .gte(from)
+      );
+
     } else if (from != null) {
-      criteriaList.add(Criteria.where("endDate").gte(from));
+
+      criteriaList.add(
+          Criteria.where("endDate").gte(from)
+      );
+
     } else if (to != null) {
-      criteriaList.add(Criteria.where("startDate").lte(to));
+
+      criteriaList.add(
+          Criteria.where("startDate").lte(to)
+      );
     }
 
     Criteria finalCriteria = new Criteria();
+
     if (!criteriaList.isEmpty()) {
-      finalCriteria.andOperator(criteriaList.toArray(new Criteria[0]));
+
+      finalCriteria.andOperator(
+          criteriaList.toArray(new Criteria[0])
+      );
     }
 
     Query query = new Query(finalCriteria);
-    return mongoTemplate.find(query, LeaveRequest.class);
+
+    return mongoTemplate.find(
+        query,
+        LeaveRequest.class
+    );
   }
 }
