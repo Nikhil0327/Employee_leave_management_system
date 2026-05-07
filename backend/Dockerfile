@@ -8,4 +8,4 @@ RUN mvn clean package -DskipTests
 
 EXPOSE 8080
 
-CMD ["java", "-jar", "target/*.jar"]
+CMD ["java", "-jar", "target/leave-management-0.1.0.jar"]
