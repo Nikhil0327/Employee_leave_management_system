@@ -25,7 +25,10 @@ export async function getBalance() {
 export async function getTeamLeaves(params) {
   const cleaned = Object.fromEntries(
     Object.entries(params || {}).filter(
-      ([, value]) => value !== "" && value !== undefined && value !== null,
+      ([, value]) =>
+        value !== "" &&
+        value !== undefined &&
+        value !== null,
     ),
   );
 
@@ -36,11 +39,19 @@ export async function getTeamLeaves(params) {
   return data;
 }
 
-export async function decideLeave(id, approved, remarks) {
+export async function decideLeave(id, approved, remarks, isAdmin = false) {
 
-  const endpoint = approved
-    ? `/api/manager/leaves/${id}/approve`
-    : `/api/manager/leaves/${id}/reject`;
+  let endpoint = "";
+
+  if (isAdmin) {
+    endpoint = approved
+      ? `/api/admin/leaves/${id}/approve`
+      : `/api/admin/leaves/${id}/reject`;
+  } else {
+    endpoint = approved
+      ? `/api/manager/leaves/${id}/approve`
+      : `/api/manager/leaves/${id}/reject`;
+  }
 
   const { data } = await api.post(endpoint, { remarks });
 
@@ -51,7 +62,10 @@ export async function getAllLeaves(params) {
 
   const cleaned = Object.fromEntries(
     Object.entries(params || {}).filter(
-      ([, value]) => value !== "" && value !== undefined && value !== null,
+      ([, value]) =>
+        value !== "" &&
+        value !== undefined &&
+        value !== null,
     ),
   );
 
