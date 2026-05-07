@@ -1,0 +1,65 @@
+@import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=Playfair+Display:wght@600&display=swap");
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ink: #0f172a;
+  --ember: #ff6b35;
+  --tide: #1b4332;
+  --sand: #f3e8e0;
+  --mist: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "Space Grotesk", sans-serif;
+  color: var(--ink);
+  background: radial-gradient(
+    circle at top,
+    #fffaf6,
+    #f3e8e0 40%,
+    #e2e8f0 100%
+  );
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: "Playfair Display", serif;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page {
+  animation: fadeUp 0.6s ease-out;
+}
+
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+}
+
+@layer components {
+  .card {
+    @apply rounded-2xl shadow-soft border border-white/60 bg-white/80;
+  }
+  .tag {
+    @apply rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide;
+  }
+}
