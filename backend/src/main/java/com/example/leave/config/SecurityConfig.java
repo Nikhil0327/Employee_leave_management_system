@@ -14,9 +14,13 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
+
 @Configuration
 @EnableMethodSecurity
 public class SecurityConfig {
+
   private final JwtAuthFilter jwtAuthFilter;
   private final CustomUserDetailsService userDetailsService;
 
@@ -32,7 +36,7 @@ public class SecurityConfig {
         .cors(cors -> {})
         .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
         .authorizeHttpRequests(auth -> auth
-          .requestMatchers("/api/auth/**", "/api/files/**", "/api/public/**").permitAll()
+            .requestMatchers("/api/auth/**", "/api/files/**", "/api/public/**").permitAll()
             .anyRequest().authenticated()
         )
         .authenticationProvider(authenticationProvider())
@@ -56,5 +60,18 @@ public class SecurityConfig {
   @Bean
   public PasswordEncoder passwordEncoder() {
     return new BCryptPasswordEncoder();
+  }
+
+  @Bean
+  public WebMvcConfigurer corsConfigurer() {
+    return new WebMvcConfigurer() {
+      @Override
+      public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/**")
+            .allowedOrigins("https://employee-leave-management-system-frontend.onrender.com")
+            .allowedMethods("*")
+            .allowedHeaders("*");
+      }
+    };
   }
 }
